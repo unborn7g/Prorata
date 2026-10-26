@@ -60,15 +60,15 @@ describe("Prorata prepaid meter split math, settlement, and message builder", ()
       periodDays: SAMPLE_PERIOD_DAYS,
     });
     // Days are 30, 15, 30, 30 (sum = 105)
-    // Tobi (15 days) pays half of a 30-day flatmate's base share: 2,857 vs 5,715 / 5,714 / 5,714
+    // Tobi (15 days) pays half of a 30-day flatmate's base share: 71 vs 143
     const ada = res.shares.find((s) => s.id === "ada")!;
     const tobi = res.shares.find((s) => s.id === "tobi")!;
     assert.ok(tobi.share < ada.share);
     assert.deepEqual(
       res.shares.map((s) => s.share),
-      [5715, 2857, 5714, 5714]
+      [143, 71, 143, 143]
     );
-    assert.equal(res.sumOfShares, 20000);
+    assert.equal(res.sumOfShares, SAMPLE_TOTAL);
   });
 
   it("4. Days x weight changes the split in the expected direction", () => {
@@ -94,14 +94,14 @@ describe("Prorata prepaid meter split math, settlement, and message builder", ()
       (s) => s.id === "tobi"
     )!.share;
 
-    // Chidi (1.5x AC weight) increases from 5,714 to 7,500; Tobi decreases from 2,857 to 2,500
+    // Chidi (1.5x AC weight) increases from 143 to 187; Tobi decreases from 71 to 63
     assert.ok(chidiWeighted > chidiDays);
     assert.ok(tobiWeighted < tobiDays);
     assert.deepEqual(
       byDaysWeight.shares.map((s) => s.share),
-      [5000, 2500, 7500, 5000]
+      [125, 63, 187, 125]
     );
-    assert.equal(byDaysWeight.sumOfShares, 20000);
+    assert.equal(byDaysWeight.sumOfShares, SAMPLE_TOTAL);
   });
 
   it("5. Shares always sum exactly to the total across 250 deterministic pseudo-random cases", () => {
@@ -198,7 +198,7 @@ describe("Prorata prepaid meter split math, settlement, and message builder", ()
     });
     const settlement = settleUp(SAMPLE_PAYER_ID, split.shares);
     assert.equal(settlement.payerId, "ada");
-    assert.equal(settlement.payerOwnShare, 5715);
+    assert.equal(settlement.payerOwnShare, 143);
     assert.equal(settlement.debts.length, 3);
     assert.equal(
       settlement.debts.some((d) => d.fromId === "ada"),
@@ -220,14 +220,14 @@ describe("Prorata prepaid meter split math, settlement, and message builder", ()
       method: "days",
       periodDays: SAMPLE_PERIOD_DAYS,
     });
-    assert.ok(msg.includes("₦20,000"));
+    assert.ok(msg.includes("$500"));
     assert.ok(msg.includes("280 kWh"));
-    assert.ok(msg.includes("Ada: ₦5,715"));
-    assert.ok(msg.includes("Tobi: ₦2,857"));
-    assert.ok(msg.includes("Chidi: ₦5,714"));
-    assert.ok(msg.includes("Zainab: ₦5,714"));
-    assert.ok(msg.includes("Tobi owes Ada ₦2,857"));
-    assert.ok(msg.includes("Shares add up to ₦20,000"));
+    assert.ok(msg.includes("Ada: $143"));
+    assert.ok(msg.includes("Tobi: $71"));
+    assert.ok(msg.includes("Chidi: $143"));
+    assert.ok(msg.includes("Zainab: $143"));
+    assert.ok(msg.includes("Tobi owes Ada $71"));
+    assert.ok(msg.includes("Shares add up to $500"));
   });
 
   it("10. The sample produces the exact numbers shown across all three methods", () => {
@@ -255,15 +255,15 @@ describe("Prorata prepaid meter split math, settlement, and message builder", ()
 
     assert.deepEqual(
       eq.shares.map((s) => s.share),
-      [5000, 5000, 5000, 5000]
+      [125, 125, 125, 125]
     );
     assert.deepEqual(
       dy.shares.map((s) => s.share),
-      [5715, 2857, 5714, 5714]
+      [143, 71, 143, 143]
     );
     assert.deepEqual(
       dw.shares.map((s) => s.share),
-      [5000, 2500, 7500, 5000]
+      [125, 63, 187, 125]
     );
     assert.deepEqual(
       dw.shares.map((s) => s.unitsShare),

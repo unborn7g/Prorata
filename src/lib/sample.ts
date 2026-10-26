@@ -1,7 +1,7 @@
 import { CurrencyCode, PersonInput, SplitMethod } from "./prorata";
 
-export const SAMPLE_TOTAL = 20000;
-export const SAMPLE_CURRENCY: CurrencyCode = "NGN";
+export const SAMPLE_TOTAL = 500;
+export const SAMPLE_CURRENCY: CurrencyCode = "USD";
 export const SAMPLE_UNITS_KWH = 280;
 export const SAMPLE_PERIOD_DAYS = 30;
 export const SAMPLE_PAYER_ID = "ada";
