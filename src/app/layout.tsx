@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   },
 };
 
-const THEME_INIT_SCRIPT = `(function(){try{var m=localStorage.getItem('prorata-theme');if(m==='light'||m==='dark'){document.documentElement.setAttribute('data-theme',m);}else{document.documentElement.removeAttribute('data-theme');}}catch(e){}})();`;
+const THEME_INIT_SCRIPT = `(function(){try{var m=localStorage.getItem('prorata-theme');document.documentElement.setAttribute('data-theme',(m==='light'||m==='dark'||m==='auto')?m:'dark');}catch(e){}})();`;
 
 export default function RootLayout({
   children,

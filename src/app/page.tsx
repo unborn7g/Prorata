@@ -28,7 +28,10 @@ type ThemeMode = "auto" | "light" | "dark";
 const STORAGE_KEY = "prorata-saved-state-v1";
 
 export default function ProrataPage() {
-  const [themeMode, setThemeMode] = useState<ThemeMode>("auto");
+  const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
+  const [systemDark, setSystemDark] = useState<boolean>(true);
+  const resolvedTheme: "light" | "dark" =
+    themeMode === "auto" ? (systemDark ? "dark" : "light") : themeMode;
 
   const [totalStr, setTotalStr] = useState<string>(String(SAMPLE_TOTAL));
   const [currency, setCurrency] = useState<CurrencyCode>(SAMPLE_CURRENCY);
@@ -92,12 +95,17 @@ export default function ProrataPage() {
   // Apply theme mode & listen to system changes when Auto is active
   useEffect(() => {
     const root = document.documentElement;
-    if (themeMode === "light" || themeMode === "dark") {
-      root.setAttribute("data-theme", themeMode);
-    } else {
-      root.removeAttribute("data-theme");
-    }
+    root.setAttribute("data-theme", themeMode);
   }, [themeMode]);
+
+  // Track the system preference so Auto can resolve without a visible control
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    setSystemDark(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setSystemDark(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
 
   // Persist inputs to localStorage after hydration
   useEffect(() => {
@@ -348,104 +356,131 @@ export default function ProrataPage() {
               Not financial advice
             </span>
 
-            {/* Auto / Light / Dark Theme Segmented Control */}
+            {/* Glass light / dark switch (Auto still drives first paint) */}
             <div
               role="group"
               aria-label="Appearance"
               data-testid="theme-toggle"
-              className="pr-segmented"
+              data-mode={resolvedTheme}
+              className="pr-theme-switch"
             >
-              {(["auto", "light", "dark"] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => handleSelectTheme(m)}
-                  aria-pressed={themeMode === m}
-                  className="pr-segment"
-                >
-                  {m === "auto" ? "Auto" : m === "light" ? "Light" : "Dark"}
-                </button>
-              ))}
+              <span className="pr-theme-thumb" aria-hidden="true" />
+              <button
+                type="button"
+                aria-label="Light theme"
+                aria-pressed={resolvedTheme === "light"}
+                onClick={() => handleSelectTheme("light")}
+                className="pr-theme-opt"
+              >
+                <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+                  <circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                  <path
+                    d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+              <button
+                type="button"
+                aria-label="Dark theme"
+                aria-pressed={resolvedTheme === "dark"}
+                onClick={() => handleSelectTheme("dark")}
+                className="pr-theme-opt"
+              >
+                <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+                  <path
+                    d="M20.2 14.6a8.4 8.4 0 0 1-10.8-10.8 8.6 8.6 0 1 0 10.8 10.8z"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
       </header>
-
-      <main
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          padding: "28px 24px 72px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "24px",
-        }}
-      >
-        {/* 1. Headline Banner */}
-        <section
-          className="pr-card"
-          style={{
-            padding: "26px 30px",
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "flex-end",
-            justifyContent: "space-between",
-            gap: "16px 32px",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "8px",
-              maxWidth: "680px",
-            }}
-          >
-            <h1
-              className="pr-display"
-              style={{
-                margin: 0,
-                fontSize: "clamp(32px, 4.5vw, 48px)",
-                fontWeight: 800,
-                lineHeight: 1.05,
-                letterSpacing: "-0.035em",
-              }}
-            >
-              Split the meter fairly.
+      <main className="pr-main">
+        <section className="pr-hero">
+          <div className="pr-hero-inner">
+            <span className="pr-eyebrow">
+              <span className="pr-eyebrow-dot" />
+              Prepaid meter splitter
+            </span>
+            <h1 className="pr-display pr-hero-title">
+              Split the meter
+              <br />
+              <em>fairly.</em>
             </h1>
-            <p
-              style={{
-                margin: 0,
-                fontSize: "16.5px",
-                color: "var(--muted)",
-              }}
-            >
-              Enter what was paid on the shared prepaid meter and who was in the
-              house. Prorata splits the cost by equal share, days present, or
-              days times appliance weight, and guarantees the shares add up to
-              the exact amount paid.
+            <p className="pr-hero-sub">
+              One person tops up the meter and everyone argues about the bill.
+              Prorata turns a single top-up into shares that add up to the exact
+              amount paid, by equal share, days present, or days times appliance
+              weight.
             </p>
-          </div>
+            <div className="pr-hero-cta">
+              <button
+                type="button"
+                className="pr-btn-mint"
+                data-testid="load-sample"
+                onClick={handleLoadSample}
+              >
+                Load the 4-flatmate sample
+              </button>
+              <button
+                type="button"
+                className="pr-btn-ghost"
+                data-testid="clear-inputs"
+                onClick={handleResetBlank}
+              >
+                Start fresh
+              </button>
+            </div>
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-            <button
-              type="button"
-              className="pr-btn-ghost"
-              data-testid="load-sample"
-              onClick={handleLoadSample}
-            >
-              Load 4-flatmate sample ({formatMoney(SAMPLE_TOTAL, SAMPLE_CURRENCY)})
-            </button>
-            <button
-              type="button"
-              className="pr-btn-ghost"
-              data-testid="clear-inputs"
-              onClick={handleResetBlank}
-            >
-              Start fresh
-            </button>
+            <div className="pr-arc" aria-hidden="true">
+              <div className="pr-arc-glow" />
+              <div className="pr-arc-ring" />
+              <svg
+                className="pr-arc-sweep"
+                viewBox="0 0 1040 320"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <ellipse
+                  className="pr-arc-trace"
+                  cx="520"
+                  cy="160"
+                  rx="518"
+                  ry="158"
+                />
+                <ellipse
+                  className="pr-arc-trace pr-arc-trace-2"
+                  cx="520"
+                  cy="160"
+                  rx="518"
+                  ry="158"
+                />
+              </svg>
+            </div>
           </div>
         </section>
+
+        <div className="pr-wrap">
+          <div className="pr-section-head">
+            <span className="pr-eyebrow">
+              <span className="pr-eyebrow-dot" />
+              The workbench
+            </span>
+            <h2 className="pr-display pr-h2">The whole split on one screen.</h2>
+            <p className="pr-sub">
+              Type the top-up, mark the days, watch the shares resolve to the
+              exact cent. Everything below is live.
+            </p>
+          </div>
 
         {/* Top Split Grid: Left = Top-Up + Method + People | Right = Live Result + Who Owes Payer */}
         <section
@@ -1393,6 +1428,105 @@ export default function ProrataPage() {
           </div>
         </section>
 
+        <section className="pr-features-section">
+          <div className="pr-section-head">
+            <span className="pr-eyebrow">
+              <span className="pr-eyebrow-dot" />
+              Why it holds
+            </span>
+            <h2 className="pr-display pr-h2">Fair is a rounding decision.</h2>
+            <p className="pr-sub">
+              Splitting $500 four ways is easy. Splitting 280 kWh across 105
+              person-days is not. Prorata does the integer arithmetic so nobody
+              eats a stray cent.
+            </p>
+          </div>
+          <div className="pr-features">
+            {[
+              {
+                n: "01",
+                t: "Exact to the cent",
+                d: "Integer largest-remainder rounding in plain TypeScript. Every share is whole and the sum always equals the amount paid.",
+              },
+              {
+                n: "02",
+                t: "Three fair methods",
+                d: "Equal share, days present, or days present times appliance weight. Switch and the numbers resolve instantly.",
+              },
+              {
+                n: "03",
+                t: "Settle-up in plain words",
+                d: "Prorata names who owes the payer and how much, then writes the message for the group chat.",
+              },
+              {
+                n: "04",
+                t: "Light, dark, or system",
+                d: "Obsidian and mint by default, daylight mint when you want it. Your choice sticks across visits.",
+              },
+            ].map((f) => (
+              <article className="pr-feature" key={f.n}>
+                <span className="pr-feature-num">{f.n}</span>
+                <h3 className="pr-display pr-feature-title">{f.t}</h3>
+                <p className="pr-feature-body">{f.d}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="pr-steps-section">
+          <div className="pr-section-head">
+            <span className="pr-eyebrow">
+              <span className="pr-eyebrow-dot" />
+              Three steps
+            </span>
+            <h2 className="pr-display pr-h2">From top-up to paid up.</h2>
+          </div>
+          <div className="pr-steps">
+            {[
+              {
+                n: "01",
+                t: "Enter the top-up",
+                d: "Amount, currency, kWh received, and how many days the period covered.",
+              },
+              {
+                n: "02",
+                t: "Mark the days",
+                d: "Each person's days at home and their appliance weight, one number per column.",
+              },
+              {
+                n: "03",
+                t: "Copy the split",
+                d: "Shares, who owes whom, and a message ready for the group chat.",
+              },
+            ].map((st) => (
+              <div className="pr-step" key={st.n}>
+                <span className="pr-step-num">{st.n}</span>
+                <h3 className="pr-display pr-step-title">{st.t}</h3>
+                <p className="pr-feature-body">{st.d}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="pr-cta">
+          <h2 className="pr-display pr-cta-title">
+            Copy the message.
+            <br />
+            <em>Everyone pays up.</em>
+          </h2>
+          <p className="pr-sub pr-cta-sub">
+            No account, no install, no meter integration. One page, one split,
+            exact to the cent.
+          </p>
+          <button
+            type="button"
+            className="pr-btn-mint"
+            onClick={handleLoadSample}
+          >
+            Load the sample split
+          </button>
+        </section>
+
         {/* 7. Footer */}
         <footer
           style={{
@@ -1414,6 +1548,7 @@ export default function ProrataPage() {
             TypeScript so every share adds up to the exact amount paid.
           </span>
         </footer>
+        </div>
       </main>
     </div>
   );

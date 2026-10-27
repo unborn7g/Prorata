@@ -29,7 +29,7 @@ Splitwise-style apps handle shared expenses, but they assume round amounts and e
 
 ## 5. What it does (features)
 
-1. **Top-up details:** amount paid, currency selector, USD by default, optional units received in kWh, period length in days, and who paid.
+1. **Top-up details:** amount paid, a currency selector, optional units received in kWh, period length in days, and who paid.
 2. **People list:** add, rename, or remove flatmates. Each person has days present in the period and an optional appliance weight.
 3. **Three split methods, switchable live:**
    - Equal split.
@@ -39,14 +39,14 @@ Splitwise-style apps handle shared expenses, but they assume round amounts and e
 5. **Who owes the payer:** nets out the payer's own share and lists each debt individually.
 6. **Group-chat message:** one-click copy of a plain-text summary ready for WhatsApp, Telegram, or SMS.
 7. **Built-in sample:** four flatmates, $500, 280 kWh, 30 days, one person away half the month, one person with an AC — so the app is useful the moment it loads.
-8. **Auto / Light / Dark theme** that follows the device by default, plus saved inputs in localStorage so your numbers survive a refresh.
+8. **Light / dark glass switch** with the device preference still driving the first paint, plus saved inputs in localStorage so your numbers survive a refresh.
 
 ## 6. How I built it
 
 - Next.js 15 (App Router) + React 19 + TypeScript + Tailwind, single page, no backend, no database, no API keys.
 - All money and units maths lives in two pure modules — `src/lib/prorata.ts` and `src/lib/sample.ts` — so the UI contains no arithmetic of its own.
 - `allocateLargestRemainder` converts the total into integer units, floors each proportional share, then hands out the leftover units one at a time by largest remainder, breaking ties by list order. The sum is therefore always exact, by construction.
-- The UI is a dark obsidian-emerald glass workbench with an electric mint accent, with a light theme derived from the same tokens, and full keyboard/screen-reader labelling on every control.
+- The UI opens on a landing hero with the live workbench under it, in obsidian-emerald glass with an electric mint accent, with a light theme derived from the same tokens, and full keyboard/screen-reader labelling on every control.
 - Ten unit tests cover the maths, the guards, the settlement, the message builder, and the sample numbers. They run with `npm test` (Node's test runner through tsx) and all ten pass.
 
 ## 7. Challenges I ran into
@@ -76,7 +76,7 @@ TypeScript, Next.js 15, React 19, Tailwind CSS, Node test runner (tsx), Pillow (
 ## 11. Try it out links
 
 - Public repo: https://github.com/unborn7g/Prorata
-- Demo video: https://youtu.be/<id>
+- Demo video: https://youtu.be/1VEffiFHRww
 - Live demo: (Vercel link after deploy)
 
 ## 12. Tools / AI credit
@@ -85,4 +85,4 @@ Built by me (unborn7g). I chose the problem, the three split methods, the larges
 
 ## 13. Video script (for reference)
 
-Natural 1.0x narration, 82.9 seconds, no sped-up audio.
+Natural 1.0x narration, 64.0 seconds, no sped-up audio.
